@@ -1,0 +1,354 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Công Cụ Lọc Trùng Văn Bản (Remove Duplicate Lines)</title>
+    <!-- Tailwind CSS CDN -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Font Inter & FontAwesome Icons -->
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <style>
+        body {
+            font-family: 'Inter', sans-serif;
+        }
+        /* Custom scrollbar */
+        textarea::-webkit-scrollbar {
+            width: 8px;
+        }
+        textarea::-webkit-scrollbar-track {
+            background: #f1f1f1;
+            border-radius: 4px;
+        }
+        textarea::-webkit-scrollbar-thumb {
+            background: #cbd5e1;
+            border-radius: 4px;
+        }
+        textarea::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8;
+        }
+    </style>
+</head>
+<body class="bg-slate-50 text-slate-800 min-h-screen flex flex-col">
+
+    <!-- Header -->
+    <header class="bg-white border-b border-slate-200 sticky top-0 z-10">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 py-4 flex items-center justify-between">
+            <div class="flex items-center space-x-3">
+                <div class="bg-indigo-600 text-white p-2.5 rounded-xl shadow-md">
+                    <i class="fa-solid fa-filter text-xl"></i>
+                </div>
+                <div>
+                    <h1 class="text-xl font-bold text-slate-900 leading-tight">Lọc Trùng Văn Bản</h1>
+                    <p class="text-xs text-slate-500">Remove Duplicate Lines Online Tool</p>
+                </div>
+            </div>
+            <div>
+                <button id="btn-clear" class="inline-flex items-center space-x-2 px-3.5 py-2 text-sm font-medium text-rose-600 hover:text-rose-700 hover:bg-rose-50 rounded-lg transition-colors border border-transparent hover:border-rose-200">
+                    <i class="fa-solid fa-trash-can"></i>
+                    <span>Xóa sạch</span>
+                </button>
+            </div>
+        </div>
+    </header>
+
+    <!-- Notification Toast -->
+    <div id="toast" class="fixed bottom-5 right-5 z-50 transform translate-y-20 opacity-0 transition-all duration-300 pointer-events-none">
+        <div class="bg-slate-900 text-white px-4 py-3 rounded-xl shadow-xl flex items-center space-x-3 text-sm">
+            <i id="toast-icon" class="fa-solid fa-check-circle text-emerald-400 text-lg"></i>
+            <span id="toast-message">Đã sao chép kết quả!</span>
+        </div>
+    </div>
+
+    <!-- Main Content -->
+    <main class="flex-1 max-w-7xl w-full mx-auto px-4 sm:px-6 lg:px-8 py-6 flex flex-col gap-6">
+
+        <!-- Thống kê nhanh (Stats Dashboard) -->
+        <div class="grid grid-cols-1 sm:grid-cols-3 gap-4">
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-semibold uppercase tracking-wider text-slate-400">Tổng dòng ban đầu</p>
+                    <h3 id="stat-total" class="text-2xl font-bold text-slate-700 mt-1">0</h3>
+                </div>
+                <div class="w-10 h-10 rounded-lg bg-slate-100 flex items-center justify-between text-slate-500 justify-center">
+                    <i class="fa-solid fa-list-ol text-lg"></i>
+                </div>
+            </div>
+            
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-semibold uppercase tracking-wider text-rose-500">Dòng trùng đã loại bỏ</p>
+                    <h3 id="stat-duplicates" class="text-2xl font-bold text-rose-600 mt-1">0</h3>
+                </div>
+                <div class="w-10 h-10 rounded-lg bg-rose-50 flex items-center justify-center text-rose-500">
+                    <i class="fa-solid fa-clone text-lg"></i>
+                </div>
+            </div>
+
+            <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm flex items-center justify-between">
+                <div>
+                    <p class="text-xs font-semibold uppercase tracking-wider text-emerald-600">Dòng còn lại (Duy nhất)</p>
+                    <h3 id="stat-unique" class="text-2xl font-bold text-emerald-600 mt-1">0</h3>
+                </div>
+                <div class="w-10 h-10 rounded-lg bg-emerald-50 flex items-center justify-center text-emerald-600">
+                    <i class="fa-solid fa-check text-lg"></i>
+                </div>
+            </div>
+        </div>
+
+        <!-- Tùy chọn lọc (Control Bar) -->
+        <div class="bg-white p-4 rounded-xl border border-slate-200 shadow-sm">
+            <h2 class="text-xs font-bold text-slate-400 uppercase tracking-wider mb-3">Tùy Chọn Lọc & Sắp Xếp</h2>
+            <div class="grid grid-cols-1 md:grid-cols-3 gap-4">
+                <!-- Switches -->
+                <div class="flex flex-col justify-center space-y-2">
+                    <label class="inline-flex items-center cursor-pointer select-none">
+                        <input type="checkbox" id="opt-case-sensitive" class="sr-only peer">
+                        <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600 relative"></div>
+                        <span class="ml-3 text-sm font-medium text-slate-700">Phân biệt chữ HOA / thường</span>
+                    </label>
+
+                    <label class="inline-flex items-center cursor-pointer select-none">
+                        <input type="checkbox" id="opt-remove-empty" checked class="sr-only peer">
+                        <div class="w-9 h-5 bg-slate-200 peer-focus:outline-none rounded-full peer peer-checked:after:translate-x-full peer-checked:after:border-white after:content-[''] after:absolute after:top-[2px] after:left-[2px] after:bg-white after:border-slate-300 after:border after:rounded-full after:h-4 after:w-4 after:transition-all peer-checked:bg-indigo-600 relative"></div>
+                        <span class="ml-3 text-sm font-medium text-slate-700">Xóa dòng trống & Trim khoảng trắng</span>
+                    </label>
+                </div>
+
+                <!-- Sort option -->
+                <div class="flex flex-col justify-center">
+                    <label for="opt-sort" class="block text-xs font-medium text-slate-600 mb-1">Sắp xếp kết quả</label>
+                    <select id="opt-sort" class="w-full bg-slate-50 border border-slate-300 text-slate-700 text-sm rounded-lg focus:ring-indigo-500 focus:border-indigo-500 p-2.5 outline-none transition-all">
+                        <option value="original">Giữ nguyên thứ tự ban đầu</option>
+                        <option value="asc">Sắp xếp A đến Z</option>
+                        <option value="desc">Sắp xếp Z đến A</option>
+                    </select>
+                </div>
+
+                <!-- Action Auto / Trigger -->
+                <div class="flex items-center justify-end space-x-2">
+                    <button id="btn-process" class="w-full md:w-auto px-5 py-2.5 bg-indigo-600 hover:bg-indigo-700 text-white font-medium text-sm rounded-lg shadow-sm transition-colors flex items-center justify-center space-x-2">
+                        <i class="fa-solid fa-wand-magic-sparkles"></i>
+                        <span>Thực hiện lọc ngay</span>
+                    </button>
+                </div>
+            </div>
+        </div>
+
+        <!-- Input & Output Textareas -->
+        <div class="grid grid-cols-1 md:grid-cols-2 gap-6 flex-1 min-h-[350px]">
+            
+            <!-- Input Area -->
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm flex flex-col overflow-hidden">
+                <div class="bg-slate-50 border-b border-slate-200 px-4 py-3 flex justify-between items-center">
+                    <span class="text-sm font-semibold text-slate-700 flex items-center space-x-2">
+                        <i class="fa-solid fa-file-import text-slate-400"></i>
+                        <span>Dữ liệu đầu vào</span>
+                    </span>
+                    <button id="btn-paste" class="text-xs text-indigo-600 hover:text-indigo-800 font-medium flex items-center space-x-1">
+                        <i class="fa-regular fa-clipboard"></i>
+                        <span>Dán từ bộ nhớ</span>
+                    </button>
+                </div>
+                <textarea id="input-text" placeholder="Dán hoặc nhập danh sách của bạn tại đây (mỗi mục trên 1 dòng)..." class="w-full flex-1 p-4 text-slate-700 text-sm focus:outline-none resize-none font-mono"></textarea>
+            </div>
+
+            <!-- Output Area -->
+            <div class="bg-white rounded-xl border border-slate-200 shadow-sm flex flex-col overflow-hidden">
+                <div class="bg-slate-50 border-b border-slate-200 px-4 py-3 flex justify-between items-center">
+                    <span class="text-sm font-semibold text-slate-700 flex items-center space-x-2">
+                        <i class="fa-solid fa-file-export text-slate-400"></i>
+                        <span>Kết quả đã lọc trùng</span>
+                    </span>
+                    <div class="flex items-center space-x-2">
+                        <button id="btn-copy" class="px-2.5 py-1 bg-white border border-slate-300 hover:bg-slate-50 text-slate-700 rounded-md text-xs font-medium transition-colors flex items-center space-x-1 shadow-sm">
+                            <i class="fa-regular fa-copy text-indigo-600"></i>
+                            <span>Sao chép</span>
+                        </button>
+                        <button id="btn-download" class="px-2.5 py-1 bg-indigo-50 border border-indigo-200 hover:bg-indigo-100 text-indigo-700 rounded-md text-xs font-medium transition-colors flex items-center space-x-1 shadow-sm">
+                            <i class="fa-solid fa-download"></i>
+                            <span>Tải .txt</span>
+                        </button>
+                    </div>
+                </div>
+                <textarea id="output-text" readonly placeholder="Kết quả sau khi loại bỏ các dòng trùng lặp sẽ hiển thị ở đây..." class="w-full flex-1 p-4 text-slate-700 text-sm focus:outline-none resize-none font-mono bg-slate-50/50"></textarea>
+            </div>
+
+        </div>
+
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-white border-t border-slate-200 py-4 text-center text-xs text-slate-400">
+        <p>Công cụ lọc trùng văn bản hoạt động 100% trên trình duyệt - Dữ liệu của bạn được an toàn tuyệt đối.</p>
+    </footer>
+
+    <!-- Application Script -->
+    <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            // Elements
+            const inputText = document.getElementById('input-text');
+            const outputText = document.getElementById('output-text');
+            
+            const optCaseSensitive = document.getElementById('opt-case-sensitive');
+            const optRemoveEmpty = document.getElementById('opt-remove-empty');
+            const optSort = document.getElementById('opt-sort');
+            
+            const statTotal = document.getElementById('stat-total');
+            const statDuplicates = document.getElementById('stat-duplicates');
+            const statUnique = document.getElementById('stat-unique');
+
+            const btnProcess = document.getElementById('btn-process');
+            const btnClear = document.getElementById('btn-clear');
+            const btnCopy = document.getElementById('btn-copy');
+            const btnDownload = document.getElementById('btn-download');
+            const btnPaste = document.getElementById('btn-paste');
+
+            const toast = document.getElementById('toast');
+            const toastMessage = document.getElementById('toast-message');
+
+            // Show toast message function
+            function showToast(msg, isSuccess = true) {
+                toastMessage.textContent = msg;
+                const icon = document.getElementById('toast-icon');
+                if(isSuccess) {
+                    icon.className = "fa-solid fa-check-circle text-emerald-400 text-lg";
+                } else {
+                    icon.className = "fa-solid fa-circle-exclamation text-amber-400 text-lg";
+                }
+                toast.classList.remove('translate-y-20', 'opacity-0');
+                setTimeout(() => {
+                    toast.classList.add('translate-y-20', 'opacity-0');
+                }, 2500);
+            }
+
+            // Main Processing Logic
+            function processLines() {
+                const rawText = inputText.value;
+                if (!rawText) {
+                    outputText.value = '';
+                    statTotal.textContent = '0';
+                    statDuplicates.textContent = '0';
+                    statUnique.textContent = '0';
+                    return;
+                }
+
+                // 1. Split lines
+                let lines = rawText.split(/\r?\n/);
+                const totalLines = lines.length;
+
+                // 2. Trim & Remove empty if option enabled
+                if (optRemoveEmpty.checked) {
+                    lines = lines
+                        .map(line => line.trim())
+                        .filter(line => line.length > 0);
+                }
+
+                // 3. Remove duplicates
+                const uniqueLines = [];
+                const seenMap = new Set();
+
+                lines.forEach(line => {
+                    // Decide key based on case sensitivity
+                    const key = optCaseSensitive.checked ? line : line.toLowerCase();
+                    if (!seenMap.has(key)) {
+                        seenMap.add(key);
+                        uniqueLines.push(line);
+                    }
+                });
+
+                // 4. Sort if requested
+                const sortMode = optSort.value;
+                if (sortMode === 'asc') {
+                    uniqueLines.sort((a, b) => a.localeCompare(b, 'vi', { sensitivity: 'base' }));
+                } else if (sortMode === 'desc') {
+                    uniqueLines.sort((a, b) => b.localeCompare(a, 'vi', { sensitivity: 'base' }));
+                }
+
+                // 5. Calculate statistics
+                const uniqueCount = uniqueLines.length;
+                const duplicatesRemoved = totalLines - uniqueCount;
+
+                // Update UI
+                outputText.value = uniqueLines.join('\n');
+                statTotal.textContent = totalLines.toLocaleString('vi-VN');
+                statDuplicates.textContent = duplicatesRemoved.toLocaleString('vi-VN');
+                statUnique.textContent = uniqueCount.toLocaleString('vi-VN');
+            }
+
+            // Event Listeners for Real-time processing
+            inputText.addEventListener('input', processLines);
+            optCaseSensitive.addEventListener('change', processLines);
+            optRemoveEmpty.addEventListener('change', processLines);
+            optSort.addEventListener('change', processLines);
+            btnProcess.addEventListener('click', () => {
+                processLines();
+                showToast("Đã xử lý xong dữ liệu!");
+            });
+
+            // Clear button
+            btnClear.addEventListener('click', () => {
+                inputText.value = '';
+                outputText.value = '';
+                processLines();
+                inputText.focus();
+                showToast("Đã xóa toàn bộ dữ liệu!", false);
+            });
+
+            // Copy to Clipboard (Using fallback compatible method)
+            btnCopy.addEventListener('click', () => {
+                if (!outputText.value) {
+                    showToast("Không có dữ liệu để sao chép!", false);
+                    return;
+                }
+                
+                // Textarea select & execCommand approach for maximum preview compatibility
+                outputText.select();
+                try {
+                    document.execCommand('copy');
+                    showToast("Đã sao chép kết quả vào bộ nhớ tạm!");
+                } catch (err) {
+                    showToast("Không thể sao chép tự động", false);
+                }
+            });
+
+            // Download text file
+            btnDownload.addEventListener('click', () => {
+                const content = outputText.value;
+                if (!content) {
+                    showToast("Không có dữ liệu để tải về!", false);
+                    return;
+                }
+
+                const blob = new Blob([content], { type: 'text/plain;charset=utf-8' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = `ket-qua-loc-trung-${new Date().toISOString().slice(0, 10)}.txt`;
+                document.body.appendChild(a);
+                a.click();
+                document.body.removeChild(a);
+                URL.revokeObjectURL(url);
+                showToast("Đã tải xuống file .txt!");
+            });
+
+            // Paste from clipboard button
+            btnPaste.addEventListener('click', async () => {
+                try {
+                    if (navigator.clipboard && navigator.clipboard.readText) {
+                        const text = await navigator.clipboard.readText();
+                        inputText.value = text;
+                        processLines();
+                        showToast("Đã dán dữ liệu từ bộ nhớ!");
+                    } else {
+                        showToast("Vui lòng sử dụng phím tắt Ctrl+V để dán!", false);
+                    }
+                } catch (err) {
+                    showToast("Hãy bấm Ctrl+V vào ô nhập liệu!", false);
+                }
+            });
+        });
+    </script>
+</body>
+</html>
