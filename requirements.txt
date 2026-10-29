@@ -1,19 +1,19 @@
 # --- Các thư viện lõi cho Data Science & Machine Learning ---
-numpy>=2.0.0
-pandas>=3.0.0
-scipy>=1.18.0
-scikit-learn>=1.9.0
-pyarrow>=26.0.0
+numpy
+pandas
+scipy
+scikit-learn
+pyarrow
 
 # --- Trực quan hóa dữ liệu ---
-matplotlib>=3.11.0
-seaborn>=0.13.0
+matplotlib
+seaborn
 
 # --- Xử lý thời gian & Ngày lễ ---
-holidays>=0.100
-timezonefinder>=9.0.0
+holidays
+timezonefinder
 
 # --- Môi trường Jupyter & Notebook ---
-jupyterlab>=4.6.0
-notebook>=7.6.0
-ipykernel>=7.0.0
+jupyterlab
+notebook
+ipykernel
